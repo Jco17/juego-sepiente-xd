@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Serpiente</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        canvas {
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="juego" width="400" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById("juego");
+        const ctx = canvas.getContext("2d");
+
+        const cuadro = 20;
+        const cantidadCuadros = 20;
+        let serpiente = [{ x: 10, y: 10 }];
+        let direccion = "derecha";
+        let comida = generarComida();
+        let puntuacion = 0;
+
+        function generarComida() {
+            const x = Math.floor(Math.random() * cantidadCuadros);
+            const y = Math.floor(Math.random() * cantidadCuadros);
+            return { x, y };
+        }
+
+        function dibujar() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Dibujar serpiente
+            serpiente.forEach(segmento => {
+                ctx.fillStyle = "#3498db";
+                ctx.fillRect(segmento.x * cuadro, segmento.y * cuadro, cuadro, cuadro);
+            });
+
+            // Dibujar comida
+            ctx.fillStyle = "#e74c3c";
+            ctx.fillRect(comida.x * cuadro, comida.y * cuadro, cuadro, cuadro);
+
+            // Dibujar puntuación
+            ctx.fillStyle = "#333";
+            ctx.font = "20px Arial";
+            ctx.fillText(`Puntuación: ${puntuacion}`, 10, 30);
+        }
+
+        function mover() {
+            const cabeza = { ...serpiente[0] };
+
+            switch (direccion) {
+                case "arriba":
+                    cabeza.y--;
+                    break;
+                case "abajo":
+                    cabeza.y++;
+                    break;
+                case "izquierda":
+                    cabeza.x--;
+                    break;
+                case "derecha":
+                    cabeza.x++;
+                    break;
+            }
+
+            // Comprobar colisiones
+            if (
+                cabeza.x < 0 || cabeza.x >= cantidadCuadros ||
+                cabeza.y < 0 || cabeza.y >= cantidadCuadros ||
+                colisionConSerpiente(cabeza)
+            ) {
+                reiniciarJuego();
+                return;
+            }
+
+            // Comer comida
+            if (cabeza.x === comida.x && cabeza.y === comida.y) {
+                puntuacion++;
+                comida = generarComida();
+            } else {
+                serpiente.pop();
+            }
+
+            serpiente.unshift(cabeza);
+        }
+
+        function colisionConSerpiente(cabeza) {
+            return serpiente.some(segmento => segmento.x === cabeza.x && segmento.y === cabeza.y);
+        }
+
+        function reiniciarJuego() {
+            alert(`¡Game Over! Tu puntuación fue: ${puntuacion}`);
+            serpiente = [{ x: 10, y: 10 }];
+            direccion = "derecha";
+            puntuacion = 0;
+            comida = generarComida();
+        }
+
+        document.addEventListener("keydown", (event) => {
+            switch (event.key) {
+                case "ArrowUp":
+                    if (direccion !== "abajo") direccion = "arriba";
+                    break;
+                case "ArrowDown":
+                    if (direccion !== "arriba") direccion = "abajo";
+                    break;
+                case "ArrowLeft":
+                    if (direccion !== "derecha") direccion = "izquierda";
+                    break;
+                case "ArrowRight":
+                    if (direccion !== "izquierda") direccion = "derecha";
+                    break;
+            }
+        });
+
+        function loopJuego() {
+            mover();
+            dibujar();
+            setTimeout(loopJuego, 100);
+        }
+
+        loopJuego();
+    </script>
+</body>
+</html>
